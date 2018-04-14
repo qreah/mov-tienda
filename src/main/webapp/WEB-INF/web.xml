@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd" version="3.1">
+  <welcome-file-list>
+    <welcome-file>index.jsp</welcome-file>
+  </welcome-file-list>
+  <servlet>
+    <servlet-name>servlet_tienda</servlet-name>
+    <servlet-class>com.tiendaAE.servlet_tienda</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>servlet_cron</servlet-name>
+    <servlet-class>com.tiendaAE.CronTiendas</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>login</servlet-name>
+    <servlet-class>com.tiendaAE.Login</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>servlet_tienda</servlet-name>
+    <url-pattern>/servlet_tienda</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>servlet_cron</servlet-name>
+    <url-pattern>/CronTiendas</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>login</servlet-name>
+    <url-pattern>/login</url-pattern>
+  </servlet-mapping>
+</web-app>
