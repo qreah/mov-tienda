@@ -9,20 +9,17 @@ import java.sql.Statement;
 import java.util.*;
 
 import com.google.api.client.http.HttpTransport;
-	import com.google.api.client.json.JsonFactory;
-	import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.mybusiness.v4.MyBusiness;
+import com.google.api.services.mybusiness.v4.model.Account;
+import com.google.api.services.mybusiness.v4.model.ListAccountsResponse;
+import com.google.api.services.mybusiness.v4.model.ListLocationsResponse;
+import com.google.api.services.mybusiness.v4.model.ListReviewsResponse;
+import com.google.api.services.mybusiness.v4.model.Location;
+import com.google.api.services.mybusiness.v4.model.Review;
 	
-	import com.google.api.services.mybusiness.v3.MyBusiness;
-	import com.google.api.services.mybusiness.v3.model.Account;
-	import com.google.api.services.mybusiness.v3.model.ListAccountsResponse;
-	import com.google.api.services.mybusiness.v3.model.ListLocationsResponse;
-	import com.google.api.services.mybusiness.v3.model.ListReviewsResponse;
-	import com.google.api.services.mybusiness.v3.model.Location;
-	import com.google.api.services.mybusiness.v3.model.Review;
-
-	//import com.sun.javaws.Main;
-
-	public class RedTiendas {
+public class RedTiendas {
 	
 		Connection conn;
 		//private static final java.io.File DATA_STORE_DIR = new java.io.File("/home/rafa/we");
@@ -53,7 +50,7 @@ import com.google.api.client.http.HttpTransport;
 			 * @returns List A list of all locations for the specified account.
 			 */
 			public static List<Location> listLocations(String accountName, MyBusiness mybusiness) throws Exception {
-			  com.google.api.services.mybusiness.v3.MyBusiness.Accounts.Locations.List locationsList =
+			  com.google.api.services.mybusiness.v4.MyBusiness.Accounts.Locations.List locationsList =
 			      mybusiness.accounts().locations().list(accountName);
 			  //String filter = "location=MADRID";
 			  //locationsList.setFilter(filter);
@@ -66,19 +63,14 @@ import com.google.api.client.http.HttpTransport;
 			locations = responses.getLocations(); //borrar si no estás probando
 			  // Poner marca (*) aquí para no traerte toda la info
 			  
-				if (responses != null) {
-			    while (responses.getNextPageToken() != null)
+				while (responses.getNextPageToken() != null)
 			    	   {
 			    	    locationsList.setPageToken(responses.getNextPageToken());
 			    		System.out.println("Pasa " + responses.getNextPageToken());
 			    	    responses = locationsList.execute();
 			    	    locations.addAll(responses.getLocations());
 			    	    
-			    	   }                                                                                                                                                                                                                                                    
-			    
-			  } else {
-			    System.out.printf("Account '%s' has no locations.", accountName);
-			  } 
+			    	   } 
 			  
 			  // Poner marca aaquí (*) para no traerte toda la info
 			  
@@ -93,18 +85,18 @@ import com.google.api.client.http.HttpTransport;
 			 * @return List A list of reviews.
 			 * @throws Exception
 			 */
-			public static List<Review> listReviews(String locationName, MyBusiness mybusiness) throws Exception {
+	public static List<Review> listReviews(String locationName, MyBusiness mybusiness) throws Exception {
 			  
 			  MyBusiness.Accounts.Locations.Reviews.List reviewsList = 
 			  mybusiness.accounts().locations().reviews().list(locationName);
 			  ListReviewsResponse response = reviewsList.execute();
 			  List<Review> reviews = response.getReviews();			 
 			  return reviews;
-			}
+	}
 			
 					
 			
-			public static StringBuilder GestionValoraciones(List<Location> tiendas, MyBusiness mybusiness, Connection conn) {
+	public static StringBuilder GestionValoraciones(List<Location> tiendas, MyBusiness mybusiness, Connection conn) {
 				
 				StringBuilder sb = new StringBuilder();
 				erroresGMB errores = new erroresGMB();

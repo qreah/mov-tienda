@@ -11,7 +11,8 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.services.mybusiness.v3.MyBusiness;
+import com.google.api.services.mybusiness.v4.MyBusiness;
+
 
 // Clase que tiene como objetivo abstraer el 
 // acceso a las APIs de todos los proveedores de los programas normales de funcionamiento

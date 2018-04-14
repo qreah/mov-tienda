@@ -2,9 +2,8 @@ package com.tiendaAE;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import com.google.api.services.mybusiness.v3.model.Location;
 
-
+import com.google.api.services.mybusiness.v4.model.Location;
 
 public class erroresGMB {
 

@@ -59,6 +59,7 @@
 	<classpathentry kind="lib" path="/home/rafa/Librerías/Librerías Tienda/google-api-client-1.23.0.jar"/>
 	<classpathentry kind="lib" path="/home/rafa/Librerías/Librerías Tienda/commons-logging-1.1.1.jar"/>
 	<classpathentry kind="lib" path="/home/rafa/Software/MySQL/mysql-connector-java-5.1.44/mysql-connector-java-5.1.44-bin.jar"/>
+	<classpathentry kind="lib" path="src/main/java/lib/google-api-services-mybusiness-v4-revsnapshot-1.23.0.jar"/>
 	<classpathentry excluding="**" kind="src" output="target/mov-tiendaAE2-0.1.0-SNAPSHOT/WEB-INF/classes" path="src/main/resources">
 		<attributes>
 			<attribute name="maven.pomderived" value="true"/>
