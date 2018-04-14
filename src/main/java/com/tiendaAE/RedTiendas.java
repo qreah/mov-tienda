@@ -37,9 +37,9 @@ public class RedTiendas {
 		private static String SQLold = "";
 		static qhrea Q = new qhrea();
 		
-		public RedTiendas() {
-			// TODO Auto-generated constructor stub
-		}
+	public RedTiendas() {
+			
+	}
 		
 			
 			
