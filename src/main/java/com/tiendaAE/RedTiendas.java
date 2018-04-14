@@ -96,133 +96,248 @@ public class RedTiendas {
 			
 					
 			
+	public static StringBuilder buildString2CSV(List<Location> tiendas, MyBusiness mybusiness, Connection conn) throws Exception {
+				
+		StringBuilder sb = new StringBuilder();
+		sb.append("Ciudad; ");
+		sb.append("Dirección; ");
+		sb.append("Localización; ");
+		sb.append("Identificador; ");
+		sb.append("Comentarios; ");
+		sb.append("Valoración; ");
+		sb.append("Fecha de creación; ");
+		sb.append("Fecha de actuación; ");
+		sb.append('\n');
+				  
+		for (int i = 1; i < tiendas.size(); i++) {
+			String tienda_i = tiendas.get(i).getName();	
+			List<Review> valoraciones = listReviews(tienda_i, mybusiness);
+			for (int j = 0; j < valoraciones.size(); j++) {
+				String ciudad = tiendas.get(i).getAddress().getLocality().replace(";", "").replace("'", "");
+				String direccion = tiendas.get(i).getAddress().getAddressLines().toString().replace(";", "").replace("'", "");
+				String localizacion = tiendas.get(i).getName().replace(";", "").replace("'", "");
+				String ReviewId = valoraciones.get(j).getReviewId().replace(";", "").replace("'", "");
+				String Comment = valoraciones.get(j).getComment().replaceAll("\n", "").replace("'", "");
+				String StarRating = valoraciones.get(j).getStarRating().replace(";", "").replace("'", "");
+				String CreateTime = valoraciones.get(j).getCreateTime().replace(";", "").replace("'", "");
+				String UpdateTime = valoraciones.get(j).getUpdateTime().replace(";", "").replace("'", "");
+						  
+				sb.append(ciudad);
+				sb.append("; ");
+				sb.append(direccion);
+				sb.append("; ");
+				sb.append(localizacion);
+				sb.append("; ");
+				if (ReviewId != null) {sb.append(ReviewId);} else {sb.append(""); ReviewId = "";}
+				sb.append("; ");
+				if (Comment != null) {sb.append(Comment);} else {sb.append(""); Comment = "";}
+				sb.append("; ");
+				if (StarRating != null) {sb.append(StarRating);} else {sb.append(""); StarRating = "";}
+				sb.append("; ");
+				if (CreateTime != null) {sb.append(CreateTime);} else {sb.append(""); CreateTime = "";}
+				sb.append("; ");
+				if (UpdateTime != null) {sb.append(UpdateTime);} else {sb.append(""); UpdateTime = "";}
+				sb.append('\n');
+			}
+				
+		}
+				 
+		return sb;
+	}
+	
+	public static void loadReviews2DB(List<Location> tiendas, MyBusiness mybusiness, Connection conn) {
+		
+		StringBuilder sb = new StringBuilder();
+		erroresGMB errores = new erroresGMB();
+		try {
+			Statement secuencia = conn.createStatement(); 
+			sb.append("Ciudad; ");
+			sb.append("Dirección; ");
+			sb.append("Localización; ");
+			sb.append("Identificador; ");
+			sb.append("Comentarios; ");
+			sb.append("Valoración; ");
+			sb.append("Fecha de creación; ");
+			sb.append("Fecha de actuación; ");
+			sb.append('\n');
+		  
+			for (int i = 1; i < tiendas.size(); i++) {
+			  String tienda_i = tiendas.get(i).getName();	
+			  try {
+				 List<Review> valoraciones = listReviews(tienda_i, mybusiness);
+				 for (int j = 0; j < valoraciones.size(); j++) {
+				  String ciudad = tiendas.get(i).getAddress().getLocality().replace(";", "").replace("'", "");
+				  String direccion = tiendas.get(i).getAddress().getAddressLines().toString().replace(";", "").replace("'", "");
+				  String localizacion = tiendas.get(i).getName().replace(";", "").replace("'", "");
+				  String ReviewId = valoraciones.get(j).getReviewId().replace(";", "").replace("'", "");
+				  String Comment = valoraciones.get(j).getComment().replaceAll("\n", "").replace("'", "");
+				  String StarRating = valoraciones.get(j).getStarRating().replace(";", "").replace("'", "");
+				  String CreateTime = valoraciones.get(j).getCreateTime().replace(";", "").replace("'", "");
+				  String UpdateTime = valoraciones.get(j).getUpdateTime().replace(";", "").replace("'", "");
+				  
+				  SQL = "INSERT INTO gmb_db.Valoraciones_temp (Ciudad, Dirección, Localización, Identificación, Comentarios, Valoración, Fechacreación, Fechaactuación) VALUES ('" 
+				    + ciudad + "', '" + direccion + "', '" + localizacion 
+				    + "', '" + ReviewId + "', '" + Comment + "', '" + StarRating + "', '"  
+				    + CreateTime + "', '" + UpdateTime + "')";
+				  secuencia.executeUpdate(SQL);
+				 }
+			  } catch (Exception e) {
+				  
+				// Si llega aqui solo puede ser porque no hay valoraciones, 
+				// entonces relleno todo a cero 
+				  						  
+				  String ciudad = errores.esNull("Ciudad", tiendas.get(i), conn).replace(";", "").replace("'", "");
+				  String direccion = errores.esNull("Dirección", tiendas.get(i), conn).toString().replace(";", "").replace("'", "");
+				  String localizacion = errores.esNull("Localización", tiendas.get(i), conn).replace(";", "").replace("'", "");
+				  
+				  SQL = "INSERT INTO gmb_db.Valoraciones_temp (Ciudad, Dirección, Localización, Identificación, Comentarios, Valoración, Fechacreación, Fechaactuación) VALUES ('" 
+						  + ciudad + "', '" + direccion + "', '" + localizacion 
+						  + "', '', '', '', '', '')";
+				  secuencia.executeUpdate(SQL);
+				  
+				  }
+			  }
+		  
+		  SQL = "delete FROM gmb_db.Valoraciones_temp where Identificación = ''";
+		  secuencia.executeUpdate(SQL);
+		  
+		  
+		  SQL = "INSERT INTO gmb_db.Valoraciones (Ciudad, Dirección, Localización, Identificación, Comentarios, Valoración, Fechacreación, Fechaactuación) "
+		  		+ "SELECT * FROM gmb_db.Valoraciones_temp "
+		  		+ "WHERE (gmb_db.Valoraciones_temp.Identificación  NOT IN (SELECT gmb_db.Valoraciones.Identificación FROM gmb_db.Valoraciones))";
+		  secuencia.executeUpdate(SQL);
+		  Q.enviarMail("qhrear@gmail.com", "Actualiza gmb_db.Valoraciones de gmb_db.Valoraciones_temp.Identificación", SQL);
+		  
+		  SQL = "delete FROM gmb_db.Valoraciones_temp;";
+		  secuencia.executeUpdate(SQL);
+		  Q.enviarMail("qhrear@gmail.com", "Se borra gmb_db.Valoraciones_temp", "OK");	  
+		  
+		  
+		  }  catch (Exception e) {
+		  Q.enviarMail("qhrear@gmail.com", "Ha habido un problema", SQL + " Error: " + e);
+		  System.out.println("Ha habido un problema");
+		  System.out.println(e);
+		  }
+
+	}
+	
 	public static StringBuilder GestionValoraciones(List<Location> tiendas, MyBusiness mybusiness, Connection conn) {
-				
-				StringBuilder sb = new StringBuilder();
-				erroresGMB errores = new erroresGMB();
-				
-					
-				  try {
-					  
-					  Statement secuencia = conn.createStatement(); 
-					  //SQL = "delete FROM gmb_db.Valoraciones_temp;";
-					  //secuencia.executeUpdate(SQL);
-					  //Q.enviarMail("qhrear@gmail.com", "Se borra gmb_db.Valoraciones_temp", "OK");
-				
-				  //Gestionar la lista reviews
-				  sb.append("Ciudad; ");
-				  sb.append("Dirección; ");
-				  sb.append("Localización; ");
-				  sb.append("Identificador; ");
-				  sb.append("Comentarios; ");
-				  sb.append("Valoración; ");
-				  sb.append("Fecha de creación; ");
-				  sb.append("Fecha de actuación; ");
+		
+		StringBuilder sb = new StringBuilder();
+		erroresGMB errores = new erroresGMB();
+		
+			
+		  try {
+			  
+			  Statement secuencia = conn.createStatement(); 
+			  //SQL = "delete FROM gmb_db.Valoraciones_temp;";
+			  //secuencia.executeUpdate(SQL);
+			  //Q.enviarMail("qhrear@gmail.com", "Se borra gmb_db.Valoraciones_temp", "OK");
+		
+		  //Gestionar la lista reviews
+		  sb.append("Ciudad; ");
+		  sb.append("Dirección; ");
+		  sb.append("Localización; ");
+		  sb.append("Identificador; ");
+		  sb.append("Comentarios; ");
+		  sb.append("Valoración; ");
+		  sb.append("Fecha de creación; ");
+		  sb.append("Fecha de actuación; ");
+		  sb.append('\n');
+		  
+		  System.out.println("Cuántas tiendas hay: " + tiendas.size());
+		  for (int i = 1; i < tiendas.size(); i++) {
+			  String tienda_i = tiendas.get(i).getName();	
+			  
+			  
+			  try {
+				 
+			  List<Review> valoraciones = listReviews(tienda_i, mybusiness);
+			  
+			  for (int j = 0; j < valoraciones.size(); j++) {
+				  
+				  
+				  String ciudad = tiendas.get(i).getAddress().getLocality().replace(";", "").replace("'", "");
+				  
+				  String direccion = tiendas.get(i).getAddress().getAddressLines().toString().replace(";", "").replace("'", "");
+				  String localizacion = tiendas.get(i).getName().replace(";", "").replace("'", "");
+				  String ReviewId = valoraciones.get(j).getReviewId().replace(";", "").replace("'", "");
+				  String Comment = valoraciones.get(j).getComment().replaceAll("\n", "").replace("'", "");
+				  String StarRating = valoraciones.get(j).getStarRating().replace(";", "").replace("'", "");
+				  String CreateTime = valoraciones.get(j).getCreateTime().replace(";", "").replace("'", "");
+				  String UpdateTime = valoraciones.get(j).getUpdateTime().replace(";", "").replace("'", "");
+				  
+				  sb.append(ciudad);
+				  sb.append("; ");
+				  sb.append(direccion);
+				  sb.append("; ");
+				  sb.append(localizacion);
+				  sb.append("; ");
+				  if (ReviewId != null) {sb.append(ReviewId);} else {sb.append(""); ReviewId = "";}
+				  sb.append("; ");
+				  if (Comment != null) {sb.append(Comment);} else {sb.append(""); Comment = "";}
+				  sb.append("; ");
+				  if (StarRating != null) {sb.append(StarRating);} else {sb.append(""); StarRating = "";}
+				  sb.append("; ");
+				  if (CreateTime != null) {sb.append(CreateTime);} else {sb.append(""); CreateTime = "";}
+				  sb.append("; ");
+				  if (UpdateTime != null) {sb.append(UpdateTime);} else {sb.append(""); UpdateTime = "";}
 				  sb.append('\n');
 				  
-				  System.out.println("Cuántas tiendas hay: " + tiendas.size());
-				  for (int i = 1; i < tiendas.size(); i++) {
-					  String tienda_i = tiendas.get(i).getName();	
-					  
-					  
-					  try {
-						 
-					  List<Review> valoraciones = listReviews(tienda_i, mybusiness);
-					  
-					  for (int j = 0; j < valoraciones.size(); j++) {
-						  
-						  
-						  String ciudad = tiendas.get(i).getAddress().getLocality().replace(";", "").replace("'", "");
-						  
-						  String direccion = tiendas.get(i).getAddress().getAddressLines().toString().replace(";", "").replace("'", "");
-						  String localizacion = tiendas.get(i).getName().replace(";", "").replace("'", "");
-						  String ReviewId = valoraciones.get(j).getReviewId().replace(";", "").replace("'", "");
-						  String Comment = valoraciones.get(j).getComment().replaceAll("\n", "").replace("'", "");
-						  String StarRating = valoraciones.get(j).getStarRating().replace(";", "").replace("'", "");
-						  String CreateTime = valoraciones.get(j).getCreateTime().replace(";", "").replace("'", "");
-						  String UpdateTime = valoraciones.get(j).getUpdateTime().replace(";", "").replace("'", "");
-						  
-						  sb.append(ciudad);
-						  sb.append("; ");
-						  sb.append(direccion);
-						  sb.append("; ");
-						  sb.append(localizacion);
-						  sb.append("; ");
-						  if (ReviewId != null) {sb.append(ReviewId);} else {sb.append(""); ReviewId = "";}
-						  sb.append("; ");
-						  if (Comment != null) {sb.append(Comment);} else {sb.append(""); Comment = "";}
-						  sb.append("; ");
-						  if (StarRating != null) {sb.append(StarRating);} else {sb.append(""); StarRating = "";}
-						  sb.append("; ");
-						  if (CreateTime != null) {sb.append(CreateTime);} else {sb.append(""); CreateTime = "";}
-						  sb.append("; ");
-						  if (UpdateTime != null) {sb.append(UpdateTime);} else {sb.append(""); UpdateTime = "";}
-						  sb.append('\n');
-						  
-						  
-						  
-							  SQL = "INSERT INTO gmb_db.Valoraciones_temp (Ciudad, Dirección, Localización, Identificación, Comentarios, Valoración, Fechacreación, Fechaactuación) VALUES ('" 
-								  + ciudad + "', '" + direccion + "', '" + localizacion 
-								  + "', '" + ReviewId + "', '" + Comment + "', '" + StarRating + "', '"  
-								  + CreateTime + "', '" + UpdateTime + "')";
-							  
-						  secuencia.executeUpdate(SQL);
-						  
-						
-					  
-					  }
-					  } catch (Exception e) {
-						  
-						// Si llega aqui solo puede ser porque no hay valoraciones, 
-						// entonces relleno todo a cero 
-						  						  
-						  String ciudad = errores.esNull("Ciudad", tiendas.get(i), conn).replace(";", "").replace("'", "");
-						  String direccion = errores.esNull("Dirección", tiendas.get(i), conn).toString().replace(";", "").replace("'", "");
-						  String localizacion = errores.esNull("Localización", tiendas.get(i), conn).replace(";", "").replace("'", "");
-						  String AUX = tiendas.get(i).getName();
-						  /*
-						  System.out.println("Ciudad: " + ciudad);
-						  System.out.println("Dirección: " + direccion);
-						  System.out.println("Localicación: " + localizacion);
-						  System.out.println("Localización AUX: " + AUX);
-						  System.out.println("");
-						  */
-						  
-						  SQL = "INSERT INTO gmb_db.Valoraciones_temp (Ciudad, Dirección, Localización, Identificación, Comentarios, Valoración, Fechacreación, Fechaactuación) VALUES ('" 
-								  + ciudad + "', '" + direccion + "', '" + localizacion 
-								  + "', '', '', '', '', '')";
-						  secuencia.executeUpdate(SQL);
-						  
-						  }
-					  }
 				  
-				  SQL = "delete FROM gmb_db.Valoraciones_temp where Identificación = ''";
+				  
+					  SQL = "INSERT INTO gmb_db.Valoraciones_temp (Ciudad, Dirección, Localización, Identificación, Comentarios, Valoración, Fechacreación, Fechaactuación) VALUES ('" 
+						  + ciudad + "', '" + direccion + "', '" + localizacion 
+						  + "', '" + ReviewId + "', '" + Comment + "', '" + StarRating + "', '"  
+						  + CreateTime + "', '" + UpdateTime + "')";
+					  
 				  secuencia.executeUpdate(SQL);
 				  
+				
+			  
+			  }
+			  } catch (Exception e) {
 				  
-				  SQL = "INSERT INTO gmb_db.Valoraciones (Ciudad, Dirección, Localización, Identificación, Comentarios, Valoración, Fechacreación, Fechaactuación) "
-				  		+ "SELECT * FROM gmb_db.Valoraciones_temp "
-				  		+ "WHERE (gmb_db.Valoraciones_temp.Identificación  NOT IN (SELECT gmb_db.Valoraciones.Identificación FROM gmb_db.Valoraciones))";
+				// Si llega aqui solo puede ser porque no hay valoraciones, 
+				// entonces relleno todo a cero 
+				  						  
+				  String ciudad = errores.esNull("Ciudad", tiendas.get(i), conn).replace(";", "").replace("'", "");
+				  String direccion = errores.esNull("Dirección", tiendas.get(i), conn).toString().replace(";", "").replace("'", "");
+				  String localizacion = errores.esNull("Localización", tiendas.get(i), conn).replace(";", "").replace("'", "");
+				  
+				  SQL = "INSERT INTO gmb_db.Valoraciones_temp (Ciudad, Dirección, Localización, Identificación, Comentarios, Valoración, Fechacreación, Fechaactuación) VALUES ('" 
+						  + ciudad + "', '" + direccion + "', '" + localizacion 
+						  + "', '', '', '', '', '')";
 				  secuencia.executeUpdate(SQL);
-				  Q.enviarMail("qhrear@gmail.com", "Actualiza gmb_db.Valoraciones de gmb_db.Valoraciones_temp.Identificación", SQL);
 				  
-				  SQL = "delete FROM gmb_db.Valoraciones_temp;";
-				  secuencia.executeUpdate(SQL);
-				  Q.enviarMail("qhrear@gmail.com", "Se borra gmb_db.Valoraciones_temp", "OK");	  
-				  
-				  
-				  }  catch (Exception e) {
-				  Q.enviarMail("qhrear@gmail.com", "Ha habido un problema", SQL + " Error: " + e);
-				  System.out.println("Ha habido un problema");
-				  System.out.println(e);
 				  }
-				  
-				  Q.enviarMail("qhrear@gmail.com", "Ok. Done", sb.toString());
-				  System.out.println("Ok.Done");
-				  return sb;
-			}
-			
-
+			  }
+		  
+		  SQL = "delete FROM gmb_db.Valoraciones_temp where Identificación = ''";
+		  secuencia.executeUpdate(SQL);
+		  
+		  
+		  SQL = "INSERT INTO gmb_db.Valoraciones (Ciudad, Dirección, Localización, Identificación, Comentarios, Valoración, Fechacreación, Fechaactuación) "
+		  		+ "SELECT * FROM gmb_db.Valoraciones_temp "
+		  		+ "WHERE (gmb_db.Valoraciones_temp.Identificación  NOT IN (SELECT gmb_db.Valoraciones.Identificación FROM gmb_db.Valoraciones))";
+		  secuencia.executeUpdate(SQL);
+		  Q.enviarMail("qhrear@gmail.com", "Actualiza gmb_db.Valoraciones de gmb_db.Valoraciones_temp.Identificación", SQL);
+		  
+		  SQL = "delete FROM gmb_db.Valoraciones_temp;";
+		  secuencia.executeUpdate(SQL);
+		  Q.enviarMail("qhrear@gmail.com", "Se borra gmb_db.Valoraciones_temp", "OK");	  
+		  
+		  
+		  }  catch (Exception e) {
+		  Q.enviarMail("qhrear@gmail.com", "Ha habido un problema", SQL + " Error: " + e);
+		  System.out.println("Ha habido un problema");
+		  System.out.println(e);
+		  }
+		  
+		  Q.enviarMail("qhrear@gmail.com", "Ok. Done", sb.toString());
+		  System.out.println("Ok.Done");
+		  return sb;
+	}
 		
 		public StringBuilder ObtenerValoraciones(Connection conn) throws Exception {
 			
@@ -243,9 +358,6 @@ public class RedTiendas {
 			StringBuilder sb = new StringBuilder();
 			String selectQuery = "SELECT * FROM gmb_db.Valoraciones";
 			String qrea = "";
-			String sbFiltrado;
-			qhrea Q = new  qhrea();
-			
 			try {
 				Statement stmt = conn.createStatement();
 				ResultSet rs = stmt.executeQuery(selectQuery);
