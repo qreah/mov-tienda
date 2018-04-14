@@ -1,7 +1,7 @@
 package com.tiendaAE;
 
 	
-	import java.io.*;
+	import java.io.*; 
 import java.net.URLDecoder;
 import java.sql.Connection;
 import java.sql.DriverManager;
