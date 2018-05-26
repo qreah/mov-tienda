@@ -4,7 +4,6 @@ package com.tiendaAE;
 import java.io.*;
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
 
@@ -22,12 +21,10 @@ import com.google.api.services.mybusiness.v4.model.Review;
 public class RedTiendas {
 	
 		Connection conn;
-		//private static final java.io.File DATA_STORE_DIR = new java.io.File("/home/rafa/we");
+		
 		private static final String APPLICATION_NAME = "Google My Business";
-		//private static FileDataStoreFactory dataStoreFactory;
 		private static HttpTransport httpTransport;
 		protected Writer W = new StringWriter();
-		//private static final JsonFactory JSON_FACTORY = JacksonFactory();
 		static JsonFactory JSON_FACTORY = new JacksonFactory();
 		private static MyBusiness mybusiness;
 		private static String flagError = "1";
@@ -40,51 +37,36 @@ public class RedTiendas {
 	public RedTiendas() {
 			
 	}
-		
 			
-			
-			
-			/*
-			 * Returns all locations for the specified account.
-			 * @param accountName The account for which to return locations.
-			 * @returns List A list of all locations for the specified account.
-			 */
-			public static List<Location> listLocations(String accountName, MyBusiness mybusiness) throws Exception {
-			  com.google.api.services.mybusiness.v4.MyBusiness.Accounts.Locations.List locationsList =
-			      mybusiness.accounts().locations().list(accountName);
-			  //String filter = "location=MADRID";
-			  //locationsList.setFilter(filter);
-			  
-			  //System.out.println("Número de tiendas (lo último): " + locationsList.size());
-			  ListLocationsResponse responses = locationsList.execute();  
-			 
-			  List<Location> locations = responses.getLocations();
-			//locations.batchGet(accountName, getLocationsRequest);
-			locations = responses.getLocations(); //borrar si no estás probando
-			  // Poner marca (*) aquí para no traerte toda la info
-			  
-				while (responses.getNextPageToken() != null)
-			    	   {
-			    	    locationsList.setPageToken(responses.getNextPageToken());
-			    		System.out.println("Pasa " + responses.getNextPageToken());
-			    	    responses = locationsList.execute();
-			    	    locations.addAll(responses.getLocations());
-			    	    
-			    	   } 
-			  
-			  // Poner marca aaquí (*) para no traerte toda la info
-			  
-			  
-			  return locations;
-			}
+	/*
+	* Returns all locations for the specified account.
+	* @param accountName The account for which to return locations.
+	* @returns List A list of all locations for the specified account.
+	*/
+	
+	public static List<Location> listLocations(String accountName, MyBusiness mybusiness) throws Exception {
+		com.google.api.services.mybusiness.v4.MyBusiness.Accounts.Locations.List locationsList =
+			mybusiness.accounts().locations().list(accountName);
+		ListLocationsResponse responses = locationsList.execute();  
+		List<Location> locations = responses.getLocations();
+		while (responses.getNextPageToken() != null)
+			{
+				locationsList.setPageToken(responses.getNextPageToken());
+			    System.out.println("Pasa " + responses.getNextPageToken());
+			    responses = locationsList.execute();
+			    locations.addAll(responses.getLocations());
+			} 
+		return locations;
+	}
 
 			
-			/**
-			 * Returns a list of reviews.
-			 * @param locationName Name of the location to retrieve reviews for.
-			 * @return List A list of reviews.
-			 * @throws Exception
-			 */
+	/**
+	* Returns a list of reviews.
+	* @param locationName Name of the location to retrieve reviews for.
+	* @return List A list of reviews.
+	* @throws Exception
+	*/
+	
 	public static List<Review> listReviews(String locationName, MyBusiness mybusiness) throws Exception {
 			  
 			  MyBusiness.Accounts.Locations.Reviews.List reviewsList = 
@@ -94,7 +76,15 @@ public class RedTiendas {
 			  return reviews;
 	}
 			
-					
+				
+
+	/**
+	 * 	Get all the reviews from the client and put it into a csv file
+	 * 
+	 * @param List<Location> tiendas: list of all the stores of the client
+	 * @param MyBusiness mybusiness: mybusiness object
+	 * @param Connection conn: Conection to a mySQL database
+	 */
 			
 	public static StringBuilder buildString2CSV(List<Location> tiendas, MyBusiness mybusiness, Connection conn) throws Exception {
 				
@@ -108,11 +98,18 @@ public class RedTiendas {
 		sb.append("Fecha de creación; ");
 		sb.append("Fecha de actuación; ");
 		sb.append('\n');
-				  
+		
+		
+		// for each location
+		
 		for (int i = 1; i < tiendas.size(); i++) {
 			String tienda_i = tiendas.get(i).getName();	
 			List<Review> valoraciones = listReviews(tienda_i, mybusiness);
+			
+			// for each review
+			
 			for (int j = 0; j < valoraciones.size(); j++) {
+				
 				String ciudad = tiendas.get(i).getAddress().getLocality().replace(";", "").replace("'", "");
 				String direccion = tiendas.get(i).getAddress().getAddressLines().toString().replace(";", "").replace("'", "");
 				String localizacion = tiendas.get(i).getName().replace(";", "").replace("'", "");
@@ -144,6 +141,15 @@ public class RedTiendas {
 				 
 		return sb;
 	}
+	
+	
+	/**
+	 * Load all the reviews from a business (several locations) to a mySQL database
+	 * 
+	 * @param tiendas: list of all the locations of the business
+	 * @param mybusiness
+	 * @param conn
+	 */
 	
 	public static void loadReviews2DB(List<Location> tiendas, MyBusiness mybusiness, Connection conn) {
 		
@@ -221,23 +227,33 @@ public class RedTiendas {
 
 	}
 	
+	
+	/**
+	 * (DEPRECIATED) Get the review from all the business location and put it in a file and
+	 * into a mySQL database
+	 * 
+	 * @param tiendas
+	 * @param mybusiness
+	 * @param conn
+	 * @return
+	 */
+	
 	public static StringBuilder GestionValoraciones(List<Location> tiendas, MyBusiness mybusiness, Connection conn) {
 		
 		StringBuilder sb = new StringBuilder();
 		erroresGMB errores = new erroresGMB();
 		
 			
-		  try {
+		try {
 			  
-			  Statement secuencia = conn.createStatement(); 
-			  //SQL = "delete FROM gmb_db.Valoraciones_temp;";
-			  //secuencia.executeUpdate(SQL);
-			  //Q.enviarMail("qhrear@gmail.com", "Se borra gmb_db.Valoraciones_temp", "OK");
+			Statement secuencia = conn.createStatement(); 
+			  
 		
 		  //Gestionar la lista reviews
 		  sb.append("Ciudad; ");
 		  sb.append("Dirección; ");
 		  sb.append("Localización; ");
+		  sb.append("CodigoTienda; ");
 		  sb.append("Identificador; ");
 		  sb.append("Comentarios; ");
 		  sb.append("Valoración; ");
@@ -261,6 +277,7 @@ public class RedTiendas {
 				  
 				  String direccion = tiendas.get(i).getAddress().getAddressLines().toString().replace(";", "").replace("'", "");
 				  String localizacion = tiendas.get(i).getName().replace(";", "").replace("'", "");
+				  String codTienda = tiendas.get(i).getStoreCode().replace(";", "").replace("'", "");
 				  String ReviewId = valoraciones.get(j).getReviewId().replace(";", "").replace("'", "");
 				  String Comment = valoraciones.get(j).getComment().replaceAll("\n", "").replace("'", "");
 				  String StarRating = valoraciones.get(j).getStarRating().replace(";", "").replace("'", "");
@@ -272,6 +289,8 @@ public class RedTiendas {
 				  sb.append(direccion);
 				  sb.append("; ");
 				  sb.append(localizacion);
+				  sb.append("; ");
+				  sb.append(codTienda);
 				  sb.append("; ");
 				  if (ReviewId != null) {sb.append(ReviewId);} else {sb.append(""); ReviewId = "";}
 				  sb.append("; ");
@@ -286,8 +305,9 @@ public class RedTiendas {
 				  
 				  
 				  
-					  SQL = "INSERT INTO gmb_db.Valoraciones_temp (Ciudad, Dirección, Localización, Identificación, Comentarios, Valoración, Fechacreación, Fechaactuación) VALUES ('" 
+					  SQL = "INSERT INTO gmb_db.Valoraciones_temp (Ciudad, Dirección, Localización, CodigoTienda, Identificación, Comentarios, Valoración, Fechacreación, Fechaactuación) VALUES ('" 
 						  + ciudad + "', '" + direccion + "', '" + localizacion 
+						  + "', '" + codTienda 
 						  + "', '" + ReviewId + "', '" + Comment + "', '" + StarRating + "', '"  
 						  + CreateTime + "', '" + UpdateTime + "')";
 					  
@@ -304,8 +324,9 @@ public class RedTiendas {
 				  String ciudad = errores.esNull("Ciudad", tiendas.get(i), conn).replace(";", "").replace("'", "");
 				  String direccion = errores.esNull("Dirección", tiendas.get(i), conn).toString().replace(";", "").replace("'", "");
 				  String localizacion = errores.esNull("Localización", tiendas.get(i), conn).replace(";", "").replace("'", "");
+				  String codTienda = errores.esNull("CodigoTienda", tiendas.get(i), conn).replace(";", "").replace("'", "");
 				  
-				  SQL = "INSERT INTO gmb_db.Valoraciones_temp (Ciudad, Dirección, Localización, Identificación, Comentarios, Valoración, Fechacreación, Fechaactuación) VALUES ('" 
+				  SQL = "INSERT INTO gmb_db.Valoraciones_temp (Ciudad, Dirección, Localización, CodigoTienda, Identificación, Comentarios, Valoración, Fechacreación, Fechaactuación) VALUES ('" 
 						  + ciudad + "', '" + direccion + "', '" + localizacion 
 						  + "', '', '', '', '', '')";
 				  secuencia.executeUpdate(SQL);
@@ -317,7 +338,7 @@ public class RedTiendas {
 		  secuencia.executeUpdate(SQL);
 		  
 		  
-		  SQL = "INSERT INTO gmb_db.Valoraciones (Ciudad, Dirección, Localización, Identificación, Comentarios, Valoración, Fechacreación, Fechaactuación) "
+		  SQL = "INSERT INTO gmb_db.Valoraciones (Ciudad, Dirección, Localización, CodigoTienda, Identificación, Comentarios, Valoración, Fechacreación, Fechaactuación) "
 		  		+ "SELECT * FROM gmb_db.Valoraciones_temp "
 		  		+ "WHERE (gmb_db.Valoraciones_temp.Identificación  NOT IN (SELECT gmb_db.Valoraciones.Identificación FROM gmb_db.Valoraciones))";
 		  secuencia.executeUpdate(SQL);
@@ -339,6 +360,13 @@ public class RedTiendas {
 		  return sb;
 	}
 		
+	/**
+	 * (DEPRECIATED)
+	 * @param conn
+	 * @return
+	 * @throws Exception
+	 */
+	
 		public StringBuilder ObtenerValoraciones(Connection conn) throws Exception {
 			
 			
@@ -352,6 +380,12 @@ public class RedTiendas {
 			return GestionValoraciones(tiendas, mybusiness, conn);
 		}
 		
+		
+		/**
+		 * Get all the reviews from the mySQL database and return them
+		 * @param conn: mySQL database connection
+		 * @return list of all the reviews loaded into the database
+		 */
 		
 		public StringBuilder listarTodasValoraciones(Connection conn) {
 			
